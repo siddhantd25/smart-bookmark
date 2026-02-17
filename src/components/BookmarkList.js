@@ -9,16 +9,12 @@ export default function BookmarkList({ initialBookmarks, userId }) {
   const [url, setUrl] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // Realtime subscription using Broadcast (works with RLS)
+  // Real-time sync using Supabase Broadcast
   useEffect(() => {
-    console.log('🔌 Setting up real-time broadcast subscription for user:', userId)
-    
     const channel = supabase
       .channel(`user-${userId}-bookmarks`)
       .on('broadcast', { event: 'bookmark-added' }, (payload) => {
-        console.log('📡 Broadcast received: bookmark-added', payload)
         const newBookmark = payload.payload
-        // Only add if it doesn't already exist
         setBookmarks((prev) => {
           const exists = prev.some((b) => b.id === newBookmark.id)
           if (exists) return prev
@@ -26,19 +22,12 @@ export default function BookmarkList({ initialBookmarks, userId }) {
         })
       })
       .on('broadcast', { event: 'bookmark-deleted' }, (payload) => {
-        console.log('� Broadcast received: bookmark-deleted', payload)
         const deletedId = payload.payload.id
         setBookmarks((prev) => prev.filter((b) => b.id !== deletedId))
       })
-      .subscribe((status) => {
-        console.log('📊 Broadcast subscription status:', status)
-        if (status === 'SUBSCRIBED') {
-          console.log('✅ Successfully subscribed to broadcasts')
-        }
-      })
+      .subscribe()
 
     return () => {
-      console.log('🔌 Cleaning up broadcast subscription')
       supabase.removeChannel(channel)
     }
   }, [userId])
@@ -49,7 +38,6 @@ export default function BookmarkList({ initialBookmarks, userId }) {
 
     setLoading(true)
     
-    // Optimistic update - add to UI immediately
     const tempId = `temp-${Date.now()}`
     const newBookmark = {
       id: tempId,
@@ -66,10 +54,8 @@ export default function BookmarkList({ initialBookmarks, userId }) {
       .select()
 
     if (!error && data) {
-      // Replace temp bookmark with real one from database
       setBookmarks((prev) => prev.map(b => b.id === tempId ? data[0] : b))
       
-      // Broadcast to other windows
       await supabase.channel(`user-${userId}-bookmarks`).send({
         type: 'broadcast',
         event: 'bookmark-added',
@@ -79,7 +65,6 @@ export default function BookmarkList({ initialBookmarks, userId }) {
       setTitle('')
       setUrl('')
     } else {
-      // Remove temp bookmark on error
       setBookmarks((prev) => prev.filter(b => b.id !== tempId))
       console.error('Error adding bookmark:', error)
       alert('Failed to add bookmark. Please try again.')
@@ -88,13 +73,11 @@ export default function BookmarkList({ initialBookmarks, userId }) {
   }
 
   const handleDelete = async (id) => {
-    // Optimistic update - remove from UI immediately
     setBookmarks((prev) => prev.filter((b) => b.id !== id))
     
     const { error } = await supabase.from('bookmarks').delete().eq('id', id)
     
     if (!error) {
-      // Broadcast to other windows
       await supabase.channel(`user-${userId}-bookmarks`).send({
         type: 'broadcast',
         event: 'bookmark-deleted',
@@ -103,13 +86,11 @@ export default function BookmarkList({ initialBookmarks, userId }) {
     } else {
       console.error('Error deleting bookmark:', error)
       alert('Failed to delete bookmark. Please refresh the page.')
-      // Note: In a production app, you'd want to restore the bookmark on error
     }
   }
 
   return (
     <div className="space-y-6">
-      {/* Add Bookmark Form */}
       <div className="bg-white rounded-xl shadow-md p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Add New Bookmark</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -149,7 +130,6 @@ export default function BookmarkList({ initialBookmarks, userId }) {
         </form>
       </div>
 
-      {/* Bookmarks List */}
       <div className="space-y-3">
         <h2 className="text-xl font-semibold text-gray-900">Your Bookmarks</h2>
         {bookmarks.length === 0 ? (

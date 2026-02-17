@@ -19,7 +19,7 @@ export async function createClient() {
           try {
             cookieStore.set(name, '', options)
           } catch (error) {
-            // Ignore errors when cookies can't be modified
+            // Silent fail
           }
         },
       },

@@ -11,27 +11,73 @@ export default function BookmarkList({ initialBookmarks, userId }) {
 
   // Realtime subscription
   useEffect(() => {
+    console.log('🔌 Setting up real-time subscription for user:', userId)
+    
+    // Use a unique channel name for each window/tab to prevent event deduplication
+    const channelName = `bookmarks-${userId}-${Math.random().toString(36).substr(2, 9)}`
+    console.log('📺 Channel name:', channelName)
+    
     const channel = supabase
-      .channel('bookmarks-changes')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'bookmarks',
-          filter: `user_id=eq.${userId}`,
+          // Removed filter - RLS handles user filtering automatically
         },
         (payload) => {
+          console.log('📡 Real-time event received:', payload.eventType, payload)
+          
+          // Client-side filter: Only process events for current user's bookmarks
+          // This is needed because SELECT policy must be permissive for Realtime to work
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            if (payload.new.user_id !== userId) {
+              console.log('⏭️ Skipping event - not for current user')
+              return
+            }
+          }
+          // For DELETE, we don't need to filter because users can only delete their own bookmarks
+          // The DELETE RLS policy and app logic ensure this
+          
           if (payload.eventType === 'INSERT') {
-            setBookmarks((prev) => [payload.new, ...prev])
+            // Only add if it doesn't already exist (prevents duplicates from optimistic updates)
+            setBookmarks((prev) => {
+              const exists = prev.some((b) => b.id === payload.new.id)
+              console.log('➕ INSERT event - exists?', exists, 'bookmark:', payload.new)
+              if (exists) return prev
+              return [payload.new, ...prev]
+            })
           } else if (payload.eventType === 'DELETE') {
+            console.log('🗑️ DELETE event - removing bookmark:', payload.old.id)
             setBookmarks((prev) => prev.filter((b) => b.id !== payload.old.id))
+          } else if (payload.eventType === 'UPDATE') {
+            console.log('✏️ UPDATE event - updating bookmark:', payload.new.id)
+            setBookmarks((prev) =>
+              prev.map((b) => (b.id === payload.new.id ? payload.new : b))
+            )
           }
         }
       )
-      .subscribe()
+      .subscribe((status, err) => {
+        console.log('📊 Subscription status changed:', status)
+        if (err) {
+          console.error('❌ Subscription error:', err)
+        }
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ Successfully subscribed to Realtime')
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('❌ Channel error - Realtime not working')
+        } else if (status === 'TIMED_OUT') {
+          console.error('⏱️ Subscription timed out')
+        } else if (status === 'CLOSED') {
+          console.warn('🔒 Channel closed')
+        }
+      })
 
     return () => {
+      console.log('🔌 Cleaning up real-time subscription')
       supabase.removeChannel(channel)
     }
   }, [userId])

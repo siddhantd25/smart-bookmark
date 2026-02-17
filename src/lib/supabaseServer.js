@@ -16,7 +16,11 @@ export async function createClient() {
           cookieStore.set(name, value, options)
         },
         remove(name, options) {
-          cookieStore.set(name, '', options)
+          try {
+            cookieStore.set(name, '', options)
+          } catch (error) {
+            // Ignore errors when cookies can't be modified
+          }
         },
       },
     }

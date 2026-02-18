@@ -102,6 +102,18 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - Changes sync instantly across all browser tabs
 - No polling required
 
+## Challenges & Solutions
+
+### 1. Real-time Updates Consistency
+**Challenge:** We noticed that realtime updates weren't consistently reflecting across all clients, particularly when adding or removing bookmarks. Dependencies on simple state changes were not robust enough for a production-grade application.
+
+**Solution:** We implemented **Supabase Broadcast** channels. Instead of relying solely on database changes to trigger UI updates (which can sometimes be delayed or miss events due to connection flickers), we explicitly broadcast `bookmark-added` and `bookmark-deleted` events. This ensures that every connected client receives an immediate, payload-rich notification to update its local state instantly.
+
+### 2. Browser Caching Issues with Realtime
+**Challenge:** During development, we encountered an issue where browser caching mechanisms were interfering with the WebSocket connections, causing stale data to be displayed even after a successful update. The UI would sometimes revert to a previous state upon refresh.
+
+**Solution:** We optimized the state management logic to prioritize the incoming real-time payload over cached data. By ensuring the `useEffect` hooks for subscriptions are properly cleaned up and that state mutations are atomic based on unique IDs (handling potential duplicates from optimistic updates vs. confirmed server writes), we eliminated the ghosting and stale data issues.
+
 ## Environment Variables
 
 ```env

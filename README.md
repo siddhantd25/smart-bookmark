@@ -1,19 +1,23 @@
 # Smart Bookmark App
 
-A production-ready fullstack bookmark manager built with Next.js App Router, Supabase, and Tailwind CSS. Features Google OAuth authentication, real-time updates, and complete data isolation.
+A premium, production-ready fullstack bookmark manager built with **Next.js 16**, **Supabase**, and **Tailwind CSS 4**.
+
+Now featuring a stunning **Glassmorphism UI**, smooth **Framer Motion** animations, and a completely modernized user experience.
 
 ## Features
 
+- ✨ **Premium UI** - Deep dark theme with rich gradients and glassmorphism effects
+- 💎 **Smooth Animations** - Powered by Framer Motion for a fluid feel
 - 🔐 **Google OAuth Authentication** - Secure login with Supabase Auth
-- 📚 **Bookmark Management** - Add, view, and delete bookmarks
-- ⚡ **Real-time Updates** - Changes sync instantly across all tabs
+- 📚 **Bookmark Management** - Add, view, copy, and delete bookmarks instantly
+- ⚡ **Real-time Updates** - Changes sync instantly across all devices/tabs
 - 🔒 **Row Level Security** - Complete data isolation at database level
-- 🎨 **Modern UI** - Clean, responsive design with Tailwind CSS
-- 🚀 **Production Ready** - Optimized for Vercel deployment
+- 🎨 **Modern Design System** - Custom scrollbars, glowing effects, and Lucide icons
 
 ## Tech Stack
 
 - **Frontend**: Next.js 16 (App Router), React 19, Tailwind CSS 4
+- **UI Library**: Framer Motion, Lucide React, CLSX
 - **Backend**: Supabase (Auth, Postgres, Realtime)
 - **Deployment**: Vercel
 
@@ -54,7 +58,7 @@ npm install
    - Go to **Credentials** → **Create Credentials** → **OAuth 2.0 Client ID**
    - Application type: **Web application**
    - Add authorized redirect URIs:
-     - Development: `https://dzyvudhqaubmfgkkdlqm.supabase.co/auth/v1/callback`
+     - Development: `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`
      - Production: `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`
    - Copy **Client ID** and **Client Secret**
 4. In Supabase, paste the Google Client ID and Client Secret
@@ -98,111 +102,9 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - Changes sync instantly across all browser tabs
 - No polling required
 
-## Project Structure
-
-```
-smart-bookmark/
-├── src/
-│   ├── app/
-│   │   ├── auth/
-│   │   │   └── callback/
-│   │   │       └── route.js          # OAuth callback handler
-│   │   ├── dashboard/
-│   │   │   └── page.js               # Dashboard (Server Component)
-│   │   ├── login/
-│   │   │   └── page.js               # Login page (Client Component)
-│   │   ├── layout.js                 # Root layout
-│   │   └── page.js                   # Homepage (redirects)
-│   ├── components/
-│   │   ├── BookmarkList.js           # Bookmark list with realtime (Client)
-│   │   └── Header.js                 # Header with logout (Client)
-│   ├── lib/
-│   │   ├── supabaseClient.js         # Client-side Supabase
-│   │   └── supabaseServer.js         # Server-side Supabase
-│   └── middleware.js                 # Auth middleware
-├── supabase-migration.sql            # Database schema
-└── .env.local                        # Environment variables
-```
-
-## Deployment to Vercel
-
-### 1. Push to GitHub
-```bash
-git init
-git add .
-git commit -m "Initial commit"
-git remote add origin YOUR_GITHUB_REPO_URL
-git push -u origin main
-```
-
-### 2. Deploy to Vercel
-1. Go to [Vercel Dashboard](https://vercel.com)
-2. Click **Add New** → **Project**
-3. Import your GitHub repository
-4. Configure environment variables:
-   - `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anon key
-5. Click **Deploy**
-
-### 3. Update Google OAuth Redirect URIs
-1. Go to [Google Cloud Console](https://console.cloud.google.com)
-2. Navigate to your OAuth 2.0 Client ID
-3. Add your Vercel production URL to authorized redirect URIs:
-   - `https://YOUR_VERCEL_APP.vercel.app/auth/callback`
-4. Save changes
-
-### 4. Update Supabase Redirect URLs
-1. In Supabase Dashboard, go to **Authentication** → **URL Configuration**
-2. Add your Vercel production URL to **Site URL** and **Redirect URLs**
-
-## Testing
-
-### Authentication
-- [ ] Login with Google works
-- [ ] Session persists after browser restart
-- [ ] Logout redirects to login page
-
-### Bookmarks
-- [ ] Can add bookmarks
-- [ ] Can delete bookmarks
-- [ ] Bookmarks display correctly
-
-### Real-time
-- [ ] Open two tabs
-- [ ] Add bookmark in Tab 1 → appears in Tab 2
-- [ ] Delete bookmark in Tab 1 → disappears in Tab 2
-
-### Security (RLS)
-- [ ] Login with User A → add bookmarks
-- [ ] Logout → login with User B
-- [ ] User B cannot see User A's bookmarks
-
 ## Environment Variables
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_ANON_KEY
 ```
-
-## Troubleshooting
-
-### "Invalid login credentials" error
-- Ensure Google OAuth is properly configured in Supabase
-- Check that redirect URIs match exactly in Google Cloud Console
-
-### Bookmarks not appearing
-- Verify the database migration ran successfully
-- Check browser console for errors
-- Ensure RLS policies are enabled
-
-### Real-time not working
-- Verify Realtime is enabled on the `bookmarks` table
-- Check that the subscription filter matches the user ID
-
-## License
-
-MIT
-
-## Support
-
-For issues or questions, please open an issue on GitHub.
